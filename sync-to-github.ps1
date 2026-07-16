@@ -1,110 +1,109 @@
-# ============================================================
-#  数学建模资料 — 一键同步到 GitHub
+﻿# ============================================================
+#  Mathematical Modeling Materials - Sync to GitHub
 #  Mathematical_Modeling_BUPT
 # ============================================================
 
 $repoPath = "D:\ppt\大学\数学建模"
 $repoUrl  = "https://github.com/LinList/Mathematical_Modeling_BUPT"
 
-# ---------- 颜色输出 ----------
-function Write-Step  ($msg) { Write-Host $msg -ForegroundColor Cyan }
-function Write-OK    ($msg) { Write-Host "   $msg" -ForegroundColor Green }
-function Write-Info  ($msg) { Write-Host "   $msg" -ForegroundColor Yellow }
-function Write-Error ($msg) { Write-Host "   $msg" -ForegroundColor Red }
+# ---------- Color Output ----------
+function Step  ($msg) { Write-Host $msg -ForegroundColor Cyan }
+function OK    ($msg) { Write-Host "   [OK]  $msg" -ForegroundColor Green }
+function Info  ($msg) { Write-Host "   [..]  $msg" -ForegroundColor Yellow }
+function Fail  ($msg) { Write-Host "   [X]  $msg" -ForegroundColor Red }
 
-# ---------- 标题 ----------
+# ---------- Banner ----------
 Clear-Host
 Write-Host ""
-Write-Host "╔════════════════════════════════════════════════╗" -ForegroundColor Cyan
-Write-Host "║                                                ║" -ForegroundColor Cyan
-Write-Host "║     数学建模资料 — 同步到 GitHub               ║" -ForegroundColor White
-Write-Host "║     Mathematical_Modeling_BUPT                 ║" -ForegroundColor DarkCyan
-Write-Host "║                                                ║" -ForegroundColor Cyan
-Write-Host "╚════════════════════════════════════════════════╝" -ForegroundColor Cyan
+Write-Host "+==================================================+" -ForegroundColor Cyan
+Write-Host "|                                                  |" -ForegroundColor Cyan
+Write-Host "|  [Math Modeling]  Sync to GitHub                 |" -ForegroundColor White
+Write-Host "|  Repository: Mathematical_Modeling_BUPT          |" -ForegroundColor DarkCyan
+Write-Host "|                                                  |" -ForegroundColor Cyan
+Write-Host "+==================================================+" -ForegroundColor Cyan
 Write-Host ""
 
-# ---------- 切换到仓库目录 ----------
+# ---------- Switch to repo ----------
 Set-Location -LiteralPath $repoPath
 
-# ---------- Step 1: 检查变更 ----------
-Write-Step "[1/5] 扫描本地变更..."
+# ---------- Step 1: Check changes ----------
+Step "[1/5] Scanning local changes..."
 $status = git status --short 2>&1
 if ($LASTEXITCODE -ne 0) {
-    Write-Error "git status 执行失败，请检查仓库状态。"
+    Fail "git status failed. Please check repo state."
     Write-Host ""
-    Read-Host "按 Enter 退出"
+    Read-Host "Press Enter to exit"
     exit 1
 }
 
-if (-not $status) {
-    Write-Info "没有检测到任何变更，无需同步。"
+if ([string]::IsNullOrWhiteSpace($status)) {
+    Info "No changes detected. Nothing to sync."
     Write-Host ""
-    Read-Host "按 Enter 退出"
+    Read-Host "Press Enter to exit"
     exit 0
 }
 
-# 显示变更文件列表
-$status | ForEach-Object { Write-Host "   $_" -ForegroundColor DarkGray }
+$status | ForEach-Object { Write-Host "        $_" -ForegroundColor DarkGray }
 Write-Host ""
 
 # ---------- Step 2: git add ----------
-Write-Step "[2/5] 添加文件到暂存区..."
+Step "[2/5] Adding files to staging area..."
 git add . 2>&1 | Out-Null
 if ($LASTEXITCODE -ne 0) {
-    Write-Error "git add 失败，请检查文件权限。"
+    Fail "git add failed. Please check file permissions."
     Write-Host ""
-    Read-Host "按 Enter 退出"
+    Read-Host "Press Enter to exit"
     exit 1
 }
-Write-OK "已添加所有变更"
+OK "All changes staged"
 
 # ---------- Step 3: git commit ----------
-Write-Step "[3/5] 本地提交..."
+Step "[3/5] Local commit..."
 $timestamp = Get-Date -Format "yyyy-MM-dd HH:mm"
 git commit -m "auto-update $timestamp" 2>&1 | Out-Null
 if ($LASTEXITCODE -ne 0) {
-    Write-Info "没有新内容需要提交（可能已在之前提交过）"
+    Info "Nothing new to commit (may already be committed)"
 } else {
-    Write-OK "已提交 — $timestamp"
+    OK "Committed - $timestamp"
 }
 
-# ---------- Step 4: git pull (团队安全) ----------
-Write-Step "[4/5] 拉取远程最新内容..."
+# ---------- Step 4: git pull (team safety) ----------
+Step "[4/5] Pulling remote latest..."
 $pullOutput = git pull --rebase origin main 2>&1
 if ($LASTEXITCODE -ne 0) {
-    Write-Error "拉取失败！可能是远程有冲突，请手动处理。"
+    Fail "Pull failed! Possible conflict. Please resolve manually."
     Write-Host $pullOutput -ForegroundColor Red
     Write-Host ""
-    Read-Host "按 Enter 退出"
+    Read-Host "Press Enter to exit"
     exit 1
 }
 if ($pullOutput -match "up to date") {
-    Write-OK "远程已是最新，无需合并"
+    OK "Remote is already up to date"
 } else {
-    Write-OK "已拉取并合并远程更新"
+    OK "Remote updates merged"
 }
 
 # ---------- Step 5: git push ----------
-Write-Step "[5/5] 推送到 GitHub..."
+Step "[5/5] Pushing to GitHub..."
 $pushOutput = git push origin main 2>&1
 if ($LASTEXITCODE -ne 0) {
-    Write-Error "推送失败！请检查网络连接。"
+    Fail "Push failed! Please check your network."
     Write-Host $pushOutput -ForegroundColor Red
     Write-Host ""
-    Read-Host "按 Enter 退出"
+    Read-Host "Press Enter to exit"
     exit 1
 }
 
-# ---------- 成功 ----------
+# ---------- Success ----------
 Write-Host ""
-Write-Host "╔════════════════════════════════════════════════╗" -ForegroundColor Green
-Write-Host "║                                                ║" -ForegroundColor Green
-Write-Host "║    ✓  同步完成！                                ║" -ForegroundColor White
-Write-Host "║                                                ║" -ForegroundColor Green
-Write-Host "║    仓库: $repoUrl" -ForegroundColor DarkCyan
-Write-Host "║    时间: $timestamp" -ForegroundColor Gray
-Write-Host "║                                                ║" -ForegroundColor Green
-Write-Host "╚════════════════════════════════════════════════╝" -ForegroundColor Green
+Write-Host "+==================================================+" -ForegroundColor Green
+Write-Host "|                                                  |" -ForegroundColor Green
+Write-Host "|   [OK]  Sync completed!                          |" -ForegroundColor White
+Write-Host "|                                                  |" -ForegroundColor Green
+Write-Host "|   Repo:  $repoUrl" -ForegroundColor DarkCyan
+Write-Host "|   Time:  $timestamp" -ForegroundColor Gray
+Write-Host "|                                                  |" -ForegroundColor Green
+Write-Host "+==================================================+" -ForegroundColor Green
 Write-Host ""
 
 Start-Sleep -Seconds 2
