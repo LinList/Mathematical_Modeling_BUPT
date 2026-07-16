@@ -10,6 +10,13 @@ function OK    ($msg) { Write-Host "   [OK]  $msg" -ForegroundColor Green }
 function Info  ($msg) { Write-Host "   [..]  $msg" -ForegroundColor Yellow }
 function Fail  ($msg) { Write-Host "   [X]  $msg" -ForegroundColor Red }
 
+# Safe pause that works in both interactive and non-interactive mode
+function Wait-Exit {
+    if ($Host.Name -match "ConsoleHost") {
+        [void](Read-Host "Press Enter to exit")
+    }
+}
+
 # ---------- Banner ----------
 Clear-Host
 Write-Host ""
@@ -39,7 +46,7 @@ $gitExe = Get-Command git -ErrorAction SilentlyContinue
 if (-not $gitExe) {
     Fail "Git is NOT installed! Download from: https://git-scm.com/downloads"
     Write-Host ""
-    Read-Host "Press Enter to exit"
+    Wait-Exit
     exit 1
 }
 OK "Git found: $($gitExe.Source)"
@@ -51,7 +58,7 @@ if ($LASTEXITCODE -ne 0) {
     Write-Host "   Run: git init"
     Write-Host "   Then: git remote add origin <your-repo-url>"
     Write-Host ""
-    Read-Host "Press Enter to exit"
+    Wait-Exit
     exit 1
 }
 OK "Git repository confirmed"
@@ -62,7 +69,7 @@ if ($LASTEXITCODE -ne 0) {
     Fail "No remote 'origin' configured!"
     Write-Host "   Run: git remote add origin https://github.com/USER/REPO.git"
     Write-Host ""
-    Read-Host "Press Enter to exit"
+    Wait-Exit
     exit 1
 }
 # Clean URL for display (strip embedded credentials)
@@ -74,7 +81,7 @@ $branch = git rev-parse --abbrev-ref HEAD 2>&1
 if ($LASTEXITCODE -ne 0 -or [string]::IsNullOrWhiteSpace($branch)) {
     Fail "Cannot detect current branch!"
     Write-Host ""
-    Read-Host "Press Enter to exit"
+    Wait-Exit
     exit 1
 }
 OK "Branch: $branch"
@@ -85,7 +92,7 @@ if ([string]::IsNullOrWhiteSpace($userName)) {
     Fail "git user.name is NOT set!"
     Write-Host "   Run: git config --global user.name ""Your Name"""
     Write-Host ""
-    Read-Host "Press Enter to exit"
+    Wait-Exit
     exit 1
 }
 OK "Author: $userName"
@@ -97,14 +104,14 @@ $status = git status --short 2>&1
 if ($LASTEXITCODE -ne 0) {
     Fail "git status failed."
     Write-Host ""
-    Read-Host "Press Enter to exit"
+    Wait-Exit
     exit 1
 }
 
 if ([string]::IsNullOrWhiteSpace($status)) {
     Info "No changes detected. Nothing to sync."
     Write-Host ""
-    Read-Host "Press Enter to exit"
+    Wait-Exit
     exit 0
 }
 
@@ -117,7 +124,7 @@ git add . 2>&1 | Out-Null
 if ($LASTEXITCODE -ne 0) {
     Fail "git add failed. Check file permissions."
     Write-Host ""
-    Read-Host "Press Enter to exit"
+    Wait-Exit
     exit 1
 }
 OK "All changes staged"
@@ -139,7 +146,7 @@ if ($LASTEXITCODE -ne 0) {
     Fail "Pull failed! Possible conflict. Please resolve manually."
     Write-Host $pullOutput -ForegroundColor Red
     Write-Host ""
-    Read-Host "Press Enter to exit"
+    Wait-Exit
     exit 1
 }
 if ($pullOutput -match "up to date") {
@@ -160,7 +167,7 @@ if ($LASTEXITCODE -ne 0) {
     Write-Host "     2. Run: git config credential.helper store" -ForegroundColor Gray
     Write-Host "     3. Push once manually (git push), enter username + PAT" -ForegroundColor Gray
     Write-Host ""
-    Read-Host "Press Enter to exit"
+    Wait-Exit
     exit 1
 }
 
